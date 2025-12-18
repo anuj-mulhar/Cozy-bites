@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fooddial - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #FFF8F3; min-height: 100vh; }
+        .text-brown { color: #5D4037; } .bg-terracotta { background-color: #C26D4F; } .text-terracotta { color: #C26D4F; } .border-terracotta { border-color: #C26D4F; } .bg-input { background-color: #EFE6D8; } .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05); }
+        .tab-active { color: #C26D4F; border-bottom: 3px solid #C26D4F; } .tab-inactive { color: rgba(93, 64, 55, 0.6); border-bottom: 3px solid transparent; } .tab-inactive:hover { color: #5D4037; }
+        /* Custom File Input Styling */
+        input[type="file"]::file-selector-button { margin-right: 16px; padding: 8px 16px; border-radius: 10px; border: none; background-color: #C26D4F; color: white; font-weight: bold; cursor: pointer; transition: background .3s ease; }
+        input[type="file"]::file-selector-button:hover { background-color: #a85a3f; }
+        /* Filter Button Active State */
+        .filter-btn-active { background-color: #C26D4F; color: white; }
+        
+        /* NEW BRANDING: Fooddial Logo Container Styling */
+        #fooddial-logo {
+            background-image: url('img/fooddial-logo.png'); /* Ensure this path is correct */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8 pb-24">
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 md:gap-0">
+        <div class="text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-3">
+                <div id="fooddial-logo" class="w-10 h-10 rounded-full"></div>
+                <h1 class="text-2xl md:text-3xl font-bold text-brown">Fooddial Admin</h1>
+            </div>
+            
+            <div class="flex gap-6 mt-4 justify-center md:justify-start no-scrollbar overflow-x-auto">
+                <button id="tabSales" class="tab-active pb-1 font-bold text-lg transition-all whitespace-nowrap">Sales Overview</button>
+                <button id="tabOrders" class="tab-inactive pb-1 font-bold text-lg transition-all whitespace-nowrap">Manage Orders</button>
+                <button id="tabMenu" class="tab-inactive pb-1 font-bold text-lg transition-all whitespace-nowrap">Manage Menu</button>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 bg-white p-2 pl-4 rounded-full shadow-sm shrink-0">
+            <div id="statusToggleContainer" class="flex items-center gap-2 cursor-pointer transition-all">
+                <span id="statusLabel" class="text-sm font-bold text-brown whitespace-nowrap text-red-500">Status: Loading...</span>
+                <label for="statusToggle" class="relative inline-flex items-center cursor-pointer flex items-center">
+                    <input type="checkbox" id="statusToggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-terracotta/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta"></div>
+                </label>
+            </div>
+            <span id="adminNameDisplay" class="text-brown font-bold text-sm md:text-base truncate max-w-[150px]">Hii Admin</span>
+            <button id="logoutBtn" class="py-2 px-4 bg-terracotta text-white font-bold rounded-full shadow-md hover:bg-[#a85a3f] transition active:scale-95 text-sm flex items-center gap-2 shrink-0"><i class="fa-solid fa-right-from-bracket"></i> <span class="hidden md:inline">Log Out</span></button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-7xl mx-auto relative">
+
+        <section id="salesSection" class="transition-opacity duration-300">
+            <div class="mb-8">
+                <div class="bg-white rounded-[30px] p-6 card-shadow mb-8 border-2 border-brown/5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-brown flex items-center gap-2 mr-4"><i class="fa-solid fa-clock-check text-terracotta"></i> Delivery Time Slots</h2>
+                        <label for="slotToggle" class="relative inline-flex items-center cursor-pointer flex items-center shrink-0 whitespace-nowrap">
+                            <span class="text-sm font-bold text-brown/70 mr-3 hidden sm:inline" id="slotStatusLabel">Feature: Loading...</span>
+                            <input type="checkbox" id="slotToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-terracotta/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta"></div>
+                        </label>
+                    </div>
+
+                    <div id="slotControls" class="space-y-4">
+                        <div id="currentSlotsDisplay" class="flex flex-wrap gap-2 text-brown/80 font-semibold min-h-[30px] p-1">
+                            Loading slots...
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-brown/10">
+                            <input type="text" id="newSlotInput" placeholder="Add new slot (e.g., 6:00 PM - 8:00 PM)" class="w-full md:flex-1 p-3 bg-input rounded-xl text-brown font-semibold placeholder-brown/50 outline-none focus:ring-2 focus:ring-terracotta">
+                            <button id="addSlotBtn" class="py-2.5 px-6 bg-terracotta text-white font-bold rounded-xl shadow-md hover:bg-[#a85a3f] transition active:scale-95 flex items-center justify-center gap-2 shrink-0"><i class="fa-solid fa-plus"></i> Add Slot</button>
+                        </div>
+                        <button id="updateSlotsBtn" class="w-full py-3 bg-brown text-white font-bold rounded-xl shadow-md hover:bg-[#4E342E] transition active:scale-95 hidden"><i class="fa-solid fa-save mr-2"></i> Save Changes</button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6 bg-white p-2 rounded-2xl shadow-sm inline-flex">
+                    <button class="filter-btn filter-btn-active px-4 py-2 rounded-xl font-bold text-sm transition" data-filter="today">Today</button>
+                    <button class="filter-btn px-4 py-2 rounded-xl font-bold text-brown/70 hover:bg-input text-sm transition" data-filter="week">This Week</button>
+                    <button class="filter-btn px-4 py-2 rounded-xl font-bold text-brown/70 hover:bg-input text-sm transition" data-filter="month">This Month</button>
+                    <button class="filter-btn px-4 py-2 rounded-xl font-bold text-brown/70 hover:bg-input text-sm transition" data-filter="year">This Year</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-[30px] p-6 card-shadow border-2 border-terracotta/10 flex items-center gap-6">
+                        <div class="w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center text-terracotta">
+                            <i class="fa-solid fa-indian-rupee-sign text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-brown/70 font-bold mb-1">Total Revenue (Selected Period)</p>
+                            <h2 id="summaryRevenue" class="text-3xl md:text-4xl font-bold text-terracotta animate-pulse">Loading...</h2>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-[30px] p-6 card-shadow border-2 border-brown/5 flex items-center gap-6">
+                        <div class="w-16 h-16 bg-brown/10 rounded-full flex items-center justify-center text-brown">
+                            <i class="fa-solid fa-bag-shopping text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-brown/70 font-bold mb-1">Total Delivered Orders</p>
+                            <h2 id="summaryOrders" class="text-3xl md:text-4xl font-bold text-brown animate-pulse">---</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[30px] p-6 md:p-8 card-shadow relative">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-brown"><i class="fa-solid fa-chart-line mr-3 text-terracotta"></i>Sales Trend</h2>
+                </div>
+                <div class="w-full h-[300px] md:h-[400px] relative">
+                    <canvas id="salesChart"></canvas>
+                    <div id="chartLoading" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10 text-brown font-bold">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mr-3 text-terracotta"></i> Loading data...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="ordersSection" class="hidden transition-opacity duration-300 absolute top-0 left-0 w-full opacity-0">
+            <div class="md:bg-white md:rounded-[30px] md:p-6 md:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
+                <table class="w-full text-left border-collapse block md:table">
+                    <thead class="hidden md:table-header-group">
+                        <tr class="text-brown/60 border-b border-brown/10">
+                            <th class="p-4 font-bold">Order ID</th>
+                            <th class="p-4 font-bold">Customer</th>
+                            <th class="p-4 font-bold">Items Summary</th>
+                            <th class="p-4 font-bold">Delivery Details</th> <th class="p-4 font-bold">Total</th>
+                            <th class="p-4 font-bold">Date</th>
+                            <th class="p-4 font-bold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="block md:table-row-group gap-4 md:gap-0 flex flex-col md:block"><tr class="block md:table-row bg-white md:bg-transparent rounded-2xl shadow-sm md:shadow-none p-8 text-center"><td colspan="7" class="text-brown/70 font-semibold animate-pulse block md:table-cell">Loading orders...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="menuSection" class="hidden transition-opacity duration-300 absolute top-0 left-0 w-full">
+            <div class="bg-white rounded-[30px] p-6 md:p-8 card-shadow mb-8 border-2 border-brown/5">
+                <h2 id="formTitle" class="text-2xl font-bold text-brown mb-6"><i class="fa-solid fa-plus-circle mr-2"></i>Add New Menu Item</h2>
+                <form id="menuForm" class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6" enctype="multipart/form-data">
+                    <input type="hidden" id="editItemId" name="editItemId">
+                    <div class="md:col-span-6"><label class="block text-brown font-bold mb-2 text-sm pl-1">Item Name</label><input type="text" id="itemName" name="name" placeholder="e.g., Spicy Pepperoni Pizza" class="w-full p-3 bg-input rounded-xl text-brown font-semibold placeholder-brown/50 outline-none focus:ring-2 focus:ring-terracotta" required></div>
+                    <div class="md:col-span-3"><label class="block text-brown font-bold mb-2 text-sm pl-1">Price (₹)</label><input type="number" id="itemPrice" name="price" placeholder="e.g., 499" step="0.01" min="0" class="w-full p-3 bg-input rounded-xl text-brown font-semibold placeholder-brown/50 outline-none focus:ring-2 focus:ring-terracotta" required></div>
+                    <div class="md:col-span-3"><label class="block text-brown font-bold mb-2 text-sm pl-1">Category</label><select id="itemCategory" name="category" class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta cursor-pointer" required><option value="Pizza">Pizza</option><option value="Burger">Burger</option><option value="Pasta">Pasta</option><option value="Salad">Salad</option><option value="Dessert">Dessert</option><option value="Drinks">Drinks</option></select></div>
+                    <div class="md:col-span-8"><label class="block text-brown font-bold mb-2 text-sm pl-1">Image Upload (PC)</label><input type="file" id="itemImageFile" name="image" accept="image/*" class="w-full p-2 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta cursor-pointer"><div id="currentImageContainer" class="hidden mt-2 text-sm text-brown/70 pl-1">Current Image: <a href="#" target="_blank" id="currentImageLink" class="text-terracotta hover:underline font-bold">View</a> (Upload new file to change)</div></div>
+                    <div class="md:col-span-4"><label class="block text-brown font-bold mb-2 text-sm pl-1">Discount Off (%)</label><input type="number" id="itemDiscount" name="discountPercent" placeholder="0" min="0" max="100" class="w-full p-3 bg-input rounded-xl text-brown font-semibold placeholder-brown/50 outline-none focus:ring-2 focus:ring-terracotta"></div>
+                    <div class="md:col-span-12"><label class="block text-brown font-bold mb-2 text-sm pl-1">Description</label><textarea id="itemDescription" name="description" placeholder="Short description of the item..." rows="2" class="w-full p-3 bg-input rounded-xl text-brown font-semibold placeholder-brown/50 outline-none focus:ring-2 focus:ring-terracotta"></textarea></div>
+                    <div class="md:col-span-12 flex gap-3 mt-2"><button type="submit" id="formSubmitBtn" class="flex-1 py-3 bg-terracotta text-white font-bold rounded-xl shadow-md hover:bg-[#a85a3f] transition active:scale-95 flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> <span>Add Item</span></button><button type="button" id="formCancelBtn" class="hidden px-6 py-3 bg-gray-200 text-brown/70 font-bold rounded-xl hover:bg-gray-300 transition active:scale-95">Cancel</button></div>
+                </form>
+            </div>
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-brown">Current Menu Items</h2><button id="refreshMenuBtn" class="w-10 h-10 bg-white rounded-full text-brown shadow-sm hover:text-terracotta transition active:rotate-180"><i class="fa-solid fa-arrows-rotate"></i></button></div>
+            <div id="menuListGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"><p class="col-span-full text-center text-brown/70 font-semibold py-8 animate-pulse">Loading menu...</p></div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const SERVER_URL = 'https://cozybites-backend.onrender.com'; 
+            const logoutBtn = document.getElementById('logoutBtn'); const adminNameDisplay = document.getElementById('adminNameDisplay');
+            
+            // App Status Elements
+            const statusToggle = document.getElementById('statusToggle');
+            const statusLabel = document.getElementById('statusLabel');
+
+            // NEW Time Slot Elements
+            const slotToggle = document.getElementById('slotToggle');
+            const slotStatusLabel = document.getElementById('slotStatusLabel');
+            const currentSlotsDisplay = document.getElementById('currentSlotsDisplay');
+            const newSlotInput = document.getElementById('newSlotInput');
+            const addSlotBtn = document.getElementById('addSlotBtn');
+            const updateSlotsBtn = document.getElementById('updateSlotsBtn');
+
+            const tabSales = document.getElementById('tabSales'); const tabOrders = document.getElementById('tabOrders'); const tabMenu = document.getElementById('tabMenu');
+            const salesSection = document.getElementById('salesSection'); const ordersSection = document.getElementById('ordersSection'); const menuSection = document.getElementById('menuSection');
+            
+            const summaryRevenue = document.getElementById('summaryRevenue'); const summaryOrders = document.getElementById('summaryOrders'); const chartLoading = document.getElementById('chartLoading'); const filterBtns = document.querySelectorAll('.filter-btn');
+            let salesChartInstance = null; let currentFilter = 'today'; 
+
+            const ordersTableBody = document.getElementById('ordersTableBody'); let isFirstOrderLoad = true; let orderPollingInterval;
+            const menuForm = document.getElementById('menuForm'); const formTitle = document.getElementById('formTitle'); const formSubmitBtn = document.getElementById('formSubmitBtn'); const formCancelBtn = document.getElementById('formCancelBtn'); const editItemIdField = document.getElementById('editItemId'); const menuListGrid = document.getElementById('menuListGrid'); const refreshMenuBtn = document.getElementById('refreshMenuBtn');
+            const itemImageFile = document.getElementById('itemImageFile'); const currentImageContainer = document.getElementById('currentImageContainer'); const currentImageLink = document.getElementById('currentImageLink');
+            
+            // Time Slot State
+            let currentSlots = [];
+            let slotsChanged = false; // Flag to track unsaved changes
+
+
+            // --- Security & Logout ---
+            const token = localStorage.getItem('cozyToken'); let userRole = '', userName = '';
+            if(token) { try { userRole = JSON.parse(atob(token.split('.')[1])).role; userName = localStorage.getItem('cozyUser'); } catch(e) { localStorage.removeItem('cozyToken'); } }
+            if (!token || userRole !== 'admin') { alert("Admins only."); window.location.href = 'menu.html'; return; }
+            adminNameDisplay.textContent = `Hii ${userName}`;
+            logoutBtn.addEventListener('click', () => { localStorage.removeItem('cozyToken'); localStorage.removeItem('cozyUser'); window.location.href = 'signin.html'; });
+
+
+            // =========================================
+            // --- 1. APP STATUS & TIME SLOT FUNCTIONS ---
+            // =========================================
+            async function fetchAppStatusAndSlots() {
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/app-status`);
+                    const data = await response.json();
+                    if (response.ok) {
+                        // Global Status
+                        statusToggle.checked = data.isOnline;
+                        updateStatusLabel(data.isOnline);
+                        
+                        // Slot Status
+                        slotToggle.checked = data.isTimeSlotEnabled;
+                        updateSlotStatusLabel(data.isTimeSlotEnabled);
+                        currentSlots = data.timeSlots || [];
+                        renderCurrentSlots();
+                        
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch app status:", error);
+                    statusLabel.textContent = "Status: Error";
+                    statusToggle.disabled = true; 
+                }
+            }
+
+            function updateStatusLabel(isOnline) {
+                statusLabel.textContent = isOnline ? "Status: ONLINE" : "Status: OFFLINE";
+                statusLabel.classList.toggle('text-red-500', !isOnline);
+                statusLabel.classList.toggle('text-green-600', isOnline);
+                statusLabel.classList.remove('text-brown');
+            }
+
+            function updateSlotStatusLabel(isEnabled) {
+                slotStatusLabel.textContent = isEnabled ? "Feature: ON" : "Feature: OFF";
+                slotStatusLabel.classList.toggle('text-red-500', !isEnabled);
+                slotStatusLabel.classList.toggle('text-green-600', isEnabled);
+            }
+
+            function renderCurrentSlots() {
+                if (currentSlots.length === 0) {
+                    currentSlotsDisplay.innerHTML = '<span class="text-brown/60">No slots defined.</span>';
+                    // Show save button only if there's an action pending
+                    updateSlotsBtn.classList.toggle('hidden', !slotsChanged); 
+                    return;
+                }
+                currentSlotsDisplay.innerHTML = currentSlots.map((slot, index) => `
+                    <span class="inline-flex items-center bg-input px-3 py-1 rounded-full text-sm">
+                        ${slot}
+                        <button class="remove-slot-btn text-red-500 hover:text-red-700 ml-2" data-index="${index}"><i class="fa-solid fa-xmark text-xs"></i></button>
+                    </span>
+                `).join('');
+                updateSlotsBtn.classList.toggle('hidden', !slotsChanged);
+            }
+
+            // --- Event Handlers ---
+            statusToggle.addEventListener('change', async (e) => {
+                const isOnline = e.target.checked;
+                e.target.disabled = true;
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/admin/app-status/toggle`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        updateStatusLabel(data.isOnline);
+                        alert(`Website is now ${data.isOnline ? 'OPEN for orders.' : 'CLOSED for orders.'}`);
+                    } else {
+                        alert(`Failed to change status: ${data.message}`);
+                        e.target.checked = !isOnline; // Revert
+                    }
+                } catch (error) {
+                    alert("Network error. Could not change status.");
+                    e.target.checked = !isOnline; // Revert
+                } finally {
+                    e.target.disabled = false;
+                }
+            });
+            
+            slotToggle.addEventListener('change', async (e) => {
+                const isEnabled = e.target.checked;
+                e.target.disabled = true;
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/admin/time-slots/toggle`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ isTimeSlotEnabled: isEnabled })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        updateSlotStatusLabel(data.isTimeSlotEnabled);
+                        alert(`Time Slot feature is now ${data.isTimeSlotEnabled ? 'ENABLED.' : 'DISABLED.'}`);
+                    } else {
+                        alert(`Failed to toggle feature: ${data.message}`);
+                        e.target.checked = !isEnabled;
+                    }
+                } catch (error) {
+                    alert("Network error.");
+                    e.target.checked = !isEnabled;
+                } finally {
+                    e.target.disabled = false;
+                }
+            });
+
+            addSlotBtn.addEventListener('click', () => {
+                const newSlot = newSlotInput.value.trim();
+                if (!newSlot) {
+                    alert("Please enter a slot description (e.g., 6:00 PM - 8:00 PM).");
+                    return;
+                }
+                if (!currentSlots.includes(newSlot)) {
+                    currentSlots.push(newSlot);
+                    newSlotInput.value = '';
+                    slotsChanged = true;
+                    renderCurrentSlots();
+                } else {
+                    alert("This slot already exists.");
+                }
+            });
+
+            currentSlotsDisplay.addEventListener('click', (e) => {
+                if (e.target.closest('.remove-slot-btn')) {
+                    const index = parseInt(e.target.closest('.remove-slot-btn').dataset.index);
+                    currentSlots.splice(index, 1);
+                    slotsChanged = true;
+                    renderCurrentSlots();
+                }
+            });
+
+            updateSlotsBtn.addEventListener('click', async () => {
+                if (!slotsChanged) return;
+                
+                updateSlotsBtn.disabled = true;
+                updateSlotsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/admin/time-slots`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ timeSlots: currentSlots })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert("Time slots updated successfully!");
+                        currentSlots = data.timeSlots;
+                        slotsChanged = false;
+                    } else {
+                        throw new Error(data.message || "Failed to save slots.");
+                    }
+                } catch (error) {
+                    alert(`Error saving slots: ${error.message}`);
+                } finally {
+                    updateSlotsBtn.disabled = false;
+                    updateSlotsBtn.innerHTML = '<i class="fa-solid fa-save mr-2"></i> Save Changes';
+                    renderCurrentSlots(); // Re-render to update the button visibility
+                }
+            });
+            
+            // Logic to manage the visibility of the "Save Changes" button
+            const manageSaveButtonVisibility = () => {
+                slotsChanged = true;
+                updateSlotsBtn.classList.remove('hidden');
+            };
+            
+            newSlotInput.addEventListener('input', manageSaveButtonVisibility);
+            addSlotBtn.addEventListener('click', manageSaveButtonVisibility); 
+
+
+            // =========================================
+            // --- TAB SWITCHING LOGIC (REST UNCHANGED) ---
+            // =========================================
+            const tabs = [tabSales, tabOrders, tabMenu];
+            const sections = [salesSection, ordersSection, menuSection];
+
+            function switchTab(activeTabId) {
+                tabs.forEach((tab, index) => {
+                    if (tab.id === activeTabId) {
+                        tab.className = 'tab-active pb-1 font-bold text-lg transition-all whitespace-nowrap';
+                        sections[index].classList.remove('hidden', 'opacity-0');
+                        if (activeTabId === 'tabSales') fetchAndRenderSalesData(currentFilter);
+                        if (activeTabId === 'tabOrders') startOrderPolling();
+                        if (activeTabId === 'tabMenu') fetchAndRenderMenu();
+                    } else {
+                        tab.className = 'tab-inactive pb-1 font-bold text-lg transition-all whitespace-nowrap hover:text-brown';
+                        sections[index].classList.add('hidden', 'opacity-0');
+                        if (activeTabId !== 'tabOrders') stopOrderPolling();
+                    }
+                });
+            }
+            tabSales.addEventListener('click', () => switchTab('tabSales'));
+            tabOrders.addEventListener('click', () => switchTab('tabOrders'));
+            tabMenu.addEventListener('click', () => switchTab('tabMenu'));
+
+
+            // =========================================
+            // --- NEW: SALES OVERVIEW LOGIC ---
+            // =========================================
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    filterBtns.forEach(b => b.classList.remove('filter-btn-active', 'text-white', 'bg-terracotta'));
+                    filterBtns.forEach(b => b.classList.add('text-brown/70', 'hover:bg-input'));
+                    e.target.classList.add('filter-btn-active', 'text-white');
+                    e.target.classList.remove('text-brown/70', 'hover:bg-input');
+                    currentFilter = e.target.dataset.filter;
+                    fetchAndRenderSalesData(currentFilter);
+                });
+            });
+
+            async function fetchAndRenderSalesData(filter) {
+                chartLoading.classList.remove('hidden'); summaryRevenue.classList.add('animate-pulse'); summaryRevenue.textContent = "Loading...";
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/admin/sales-stats?filter=${filter}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || "Failed to fetch sales data");
+                    summaryRevenue.textContent = `₹${data.summary.totalSales.toFixed(2)}`;
+                    summaryOrders.textContent = data.summary.totalOrders;
+                    summaryRevenue.classList.remove('animate-pulse'); summaryOrders.classList.remove('animate-pulse');
+                    renderChart(data.chart.labels, data.chart.data, filter);
+                } catch (error) {
+                    console.error("Sales Fetch Error:", error); summaryRevenue.textContent = "Error"; alert("Failed to load sales data: " + error.message);
+                } finally {
+                    chartLoading.classList.add('hidden');
+                }
+            }
+
+            function renderChart(labels, dataPoints, filterType) {
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                if (salesChartInstance) { salesChartInstance.destroy(); }
+                let labelText = 'Sales amount (₹)';
+                if (filterType === 'today') labelText = 'Hourly Sales (₹)'; else if (filterType === 'year') labelText = 'Monthly Sales (₹)'; else labelText = 'Daily Sales (₹)';
+                salesChartInstance = new Chart(ctx, {
+                    type: 'line', data: { labels: labels, datasets: [{ label: labelText, data: dataPoints, borderColor: '#C26D4F', backgroundColor: 'rgba(194, 109, 79, 0.1)', borderWidth: 3, pointBackgroundColor: '#C26D4F', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7, fill: true, tension: 0.3 }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { backgroundColor: '#5D4037', titleFont: { family: 'Quicksand', size: 14 }, bodyFont: { family: 'Quicksand', size: 14 }, padding: 12, cornerRadius: 10, displayColors: false, callbacks: { label: function(context) { return ` Sales: ₹${context.parsed.y.toFixed(2)}`; } } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(93, 64, 55, 0.1)', borderDash: [5, 5] }, ticks: { font: { family: 'Quicksand', weight: '600' }, color: '#8D7A73', callback: function(value) { return '₹' + value; } } },
+                            x: { grid: { display: false }, ticks: { font: { family: 'Quicksand', weight: '600' }, color: '#8D7A73', maxRotation: 45, minRotation: 45 } }
+                        }
+                    }
+                });
+            }
+
+
+            // =========================================
+            // --- EXISTING ORDERS & MENU LOGIC (FIXED) ---
+            // =========================================
+            function startOrderPolling() { if (!orderPollingInterval) { fetchAndRenderOrders(); orderPollingInterval = setInterval(fetchAndRenderOrders, 3000); } }
+            function stopOrderPolling() { if (orderPollingInterval) { clearInterval(orderPollingInterval); orderPollingInterval = null; } }
+
+            async function fetchAndRenderOrders() {
+                if (isFirstOrderLoad) { ordersTableBody.innerHTML = '<tr class="block md:table-row bg-white md:bg-transparent rounded-2xl shadow-sm md:shadow-none p-8 text-center"><td colspan="7" class="text-brown/70 font-semibold animate-pulse block md:table-cell">Loading latest orders...</td></tr>'; }
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/admin/orders`, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
+                    const orders = await response.json();
+                    if (!response.ok) throw new Error(orders.message || "Failed to fetch orders.");
+                    isFirstOrderLoad = false;
+                    if (orders.length === 0) { ordersTableBody.innerHTML = '<tr class="block md:table-row bg-white md:bg-transparent rounded-2xl shadow-sm md:shadow-none p-8 text-center"><td colspan="7" class="text-brown/70 font-semibold block md:table-cell">No orders found.</td></tr>'; return; }
+                    
+                    ordersTableBody.innerHTML = orders.map(order => {
+                        const date = new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        const itemsSummary = order.items.map(item => `<span class="font-bold">${item.quantity}x</span> ${item.name}`).join(', ');
+                        
+                        const customerName = order.userId ? order.userId.name : 'Unknown User'; 
+                        const customerEmail = order.userId ? order.userId.email : ''; 
+                        const customerPhone = order.userId ? order.userId.phone : '';
+                        let contactInfo = ''; 
+                        if (customerEmail) contactInfo += `<p class="text-sm text-brown/60 break-all">${customerEmail}</p>`; 
+                        if (customerPhone) contactInfo += `<p class="text-sm text-brown/60">${customerPhone}</p>`;
+                        
+                        const address = order.deliveryAddress;
+                        const deliveryDetailsHtml = `
+                            <p class="font-semibold text-brown/80">${address.name} (${address.houseNo})</p>
+                            <p class="text-xs text-brown/60">${address.area}</p>
+                            <p class="text-xs text-brown/60">Call: ${address.phone}</p>
+                        `;
+
+                        const slotDisplay = order.deliverySlot ? `<p class="text-xs text-brown/80 mt-1">Slot: <span class="font-bold text-terracotta">${order.deliverySlot}</span></p>` : '';
+                        
+                        const statusOptions = ['Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'];
+                        const statusSelectHtml = `<select class="status-select w-full md:w-auto p-2 rounded-lg border-2 border-brown/10 text-brown font-semibold outline-none focus:border-terracotta cursor-pointer bg-white" data-order-id="${order._id}" data-current-status="${order.status}">${statusOptions.map(s => `<option value="${s}" ${order.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>`;
+                        const highlightClass = order.status === 'Preparing' ? 'border-l-4 border-terracotta' : '';
+                        
+                        return `<tr class="block md:table-row border-2 md:border-0 md:border-b border-brown/5 md:border-brown/10 hover:bg-cream-light transition p-4 md:p-0 mb-4 md:mb-0 bg-white md:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none flex flex-col gap-2 md:gap-0 relative ${highlightClass}">
+                            
+                            <td class="p-1 md:p-4 font-bold text-brown flex justify-between items-center md:table-cell text-lg md:text-base">
+                                <span class="md:hidden font-semibold text-brown/70 text-sm uppercase tracking-wider">Order ID</span>#${order._id.slice(-6).toUpperCase()}
+                            </td>
+                            
+                            <td class="p-1 md:p-4 flex justify-between items-center md:table-cell text-right md:text-left">
+                                <span class="md:hidden font-semibold text-brown/70 shrink-0 mr-4 text-sm uppercase tracking-wider">Customer</span>
+                                <div><p class="font-bold text-brown">${customerName}</p>${contactInfo}</div>
+                            </td>
+                            
+                            <td class="p-1 md:p-4 text-brown/80 flex justify-between md:table-cell text-right md:text-left">
+                                <span class="md:hidden font-semibold text-brown/70 shrink-0 mr-4 text-sm uppercase tracking-wider">Items</span>
+                                <span class="line-clamp-2 md:line-clamp-none">${itemsSummary}</span>
+                            </td>
+                            
+                            <td class="p-1 md:p-4 text-brown/80 flex justify-between md:table-cell text-right md:text-left">
+                                <span class="md:hidden font-semibold text-brown/70 shrink-0 mr-4 text-sm uppercase tracking-wider">Delivery Details</span>
+                                <div>${deliveryDetailsHtml}${slotDisplay}</div>
+                            </td>
+                            
+                            <td class="p-1 md:p-4 font-bold text-terracotta flex justify-between items-center md:table-cell text-xl md:text-base">
+                                <span class="md:hidden font-semibold text-brown/70 text-sm uppercase tracking-wider">Total</span>₹${order.totalAmount.toFixed(2)}
+                            </td>
+                            
+                            <td class="p-1 md:p-4 text-sm text-brown/60 flex justify-between items-center md:table-cell">
+                                <span class="md:hidden font-semibold text-brown/70 text-sm uppercase tracking-wider">Date</span>${date}
+                            </td>
+                            
+                            <td class="p-1 md:p-4 flex flex-col md:block md:table-cell mt-2 md:mt-0 pt-3 md:pt-4 border-t md:border-t-0 border-dashed border-brown/10">
+                                <span class="md:hidden font-bold text-brown mb-2">Update Status:</span>${statusSelectHtml}
+                            </td>
+                        </tr>`;
+                    }).join('');
+                    attachStatusListeners();
+                } catch (error) { console.error("Error loading orders:", error); if(isFirstOrderLoad) { ordersTableBody.innerHTML = `<tr class="block md:table-row bg-white md:bg-transparent rounded-2xl shadow-sm md:shadow-none p-8 text-center"><td colspan="7" class="p-8 text-center text-red-500 font-semibold block md:table-cell">Error: ${error.message}</td></tr>`; } }
+            }
+
+            function attachStatusListeners() {
+                document.querySelectorAll('.status-select').forEach(select => {
+                    if(select.dataset.listenerAttached) return;
+                    select.addEventListener('change', async (e) => {
+                        const orderId = e.target.dataset.orderId; const newStatus = e.target.value; const originalValue = e.target.dataset.currentStatus;
+                        try { e.target.disabled = true; e.target.classList.add('opacity-50');
+                            const res = await fetch(`${SERVER_URL}/api/admin/orders/${orderId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ status: newStatus }) });
+                            const data = await res.json(); if (res.ok) { e.target.classList.add('border-green-500', 'text-green-700', 'bg-green-50'); setTimeout(() => e.target.classList.remove('border-green-500', 'text-green-700', 'bg-green-50'), 1500); e.target.dataset.currentStatus = newStatus; fetchAndRenderOrders(); } else { throw new Error(data.message); }
+                        } catch (error) { alert(`Failed: ${error.message}`); e.target.value = originalValue; } finally { e.target.disabled = false; e.target.classList.remove('opacity-50'); }
+                    });
+                    select.dataset.listenerAttached = "true";
+                });
+            }
+
+            // --- MENU LOGIC ---
+            let currentMenuItems = [];
+            async function fetchAndRenderMenu() {
+                menuListGrid.innerHTML = '<p class="col-span-full text-center text-brown/70 font-semibold py-8 animate-pulse">Loading menu...</p>';
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/menu`);
+                    const items = await response.json();
+                    currentMenuItems = items;
+                    if (items.length === 0) { menuListGrid.innerHTML = '<p class="col-span-full text-center text-brown/70 font-semibold py-8">No menu items found. Add one above!</p>'; return; }
+                    
+                    menuListGrid.innerHTML = items.map(item => {
+                        const imageUrl = item.image.startsWith('http') ? item.image : `${SERVER_URL}/${item.image}`;
+                        
+                        return `<div class="bg-white rounded-[30px] p-4 card-shadow flex flex-col gap-4 group relative overflow-hidden border-2 border-transparent hover:border-terracotta/30 transition-all">
+                            <div class="w-full aspect-square rounded-[25px] overflow-hidden relative bg-input">
+                                <img src="${imageUrl}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                                ${item.discountPercent > 0 ? `<span class="absolute top-3 left-3 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">${item.discountPercent}% OFF</span>` : ''}
+                                <span class="absolute top-3 right-3 px-3 py-1 bg-white/90 text-brown text-xs font-bold rounded-full backdrop-blur-sm">${item.category}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xl text-brown leading-tight mb-1">${item.name}</h3>
+                                <p class="text-brown/60 text-sm line-clamp-2 mb-3" title="${item.description || ''}">${item.description || 'No description.'}</p>
+                                <div class="flex justify-between items-center">
+                                    <p class="text-terracotta font-bold text-2xl">₹${item.price.toFixed(2)}</p>
+                                    <div class="flex gap-2"><button class="edit-item-btn w-10 h-10 bg-input rounded-full flex items-center justify-center text-brown hover:bg-terracotta hover:text-white transition" data-id="${item._id}"><i class="fa-solid fa-pen-to-square"></i></button><button class="delete-item-btn w-10 h-10 bg-input rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition" data-id="${item._id}"><i class="fa-solid fa-trash-can"></i></button></div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } catch (error) { console.error("Error loading menu:", error); menuListGrid.innerHTML = `<p class="col-span-full text-center text-red-500 font-semibold py-8">Error: ${error.message}</p>`; }
+            }
+            refreshMenuBtn.addEventListener('click', fetchAndRenderMenu);
+
+            menuForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); 
+                const editId = editItemIdField.value;
+                const isEditing = !!editId;
+                const formData = new FormData(menuForm);
+                
+                if (isEditing && itemImageFile.files.length === 0) {
+                    formData.delete('image');
+                }
+                formData.set('price', document.getElementById('itemPrice').value);
+                formData.set('discountPercent', document.getElementById('itemDiscount').value || '0');
+
+                formSubmitBtn.disabled = true;
+                formSubmitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>${isEditing ? 'Updating...' : 'Uploading...'}</span>`;
+
+                try {
+                    const url = isEditing ? `${SERVER_URL}/api/admin/menu/${editId}` : `${SERVER_URL}/api/admin/menu`;
+                    const method = isEditing ? 'PUT' : 'POST';
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert(isEditing ? "Item updated successfully!" : "Item added successfully!");
+                        resetForm();
+                        fetchAndRenderMenu(); 
+                    } else { throw new Error(data.message || "Operation failed."); }
+                } catch (error) { alert(`Error: ${error.message}`); } finally { formSubmitBtn.disabled = false; resetFormState(isEditing); }
+            });
+
+            menuListGrid.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-item-btn'); if (!editBtn) return;
+                const id = editBtn.dataset.id;
+                const itemToEdit = currentMenuItems.find(item => item._id === id); if (!itemToEdit) return;
+
+                editItemIdField.value = id;
+                document.getElementById('itemName').value = itemToEdit.name;
+                document.getElementById('itemPrice').value = itemToEdit.price;
+                document.getElementById('itemCategory').value = itemToEdit.category;
+                currentImageContainer.classList.remove('hidden');
+                const imageUrl = itemToEdit.image.startsWith('http') ? itemToEdit.image : `${SERVER_URL}/${itemToEdit.image}`;
+                currentImageLink.href = imageUrl;
+                
+                document.getElementById('itemDiscount').value = itemToEdit.discountPercent || 0;
+                document.getElementById('itemDescription').value = itemToEdit.description || '';
+
+                formTitle.innerHTML = '<i class="fa-solid fa-pen-to-square mr-2"></i>Edit Menu Item'; formSubmitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Update Item</span>'; formSubmitBtn.classList.remove('bg-terracotta', 'hover:bg-[#a85a3f]'); formSubmitBtn.classList.add('bg-brown', 'hover:bg-brown/90'); formCancelBtn.classList.remove('hidden'); menuForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            formCancelBtn.addEventListener('click', resetForm);
+            function resetForm() { menuForm.reset(); editItemIdField.value = ''; currentImageContainer.classList.add('hidden'); resetFormState(false); }
+            function resetFormState(isEditing) { formTitle.innerHTML = '<i class="fa-solid fa-plus-circle mr-2"></i>Add New Menu Item'; formSubmitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> <span>Add Item</span>'; formSubmitBtn.classList.add('bg-terracotta', 'hover:bg-[#a85a3f]'); formSubmitBtn.classList.remove('bg-brown', 'hover:bg-brown/90'); formCancelBtn.classList.add('hidden'); }
+
+            menuListGrid.addEventListener('click', async (e) => {
+                const deleteBtn = e.target.closest('.delete-item-btn'); if (!deleteBtn) return;
+                if (!confirm("Delete this item?")) return;
+                try { deleteBtn.disabled = true; deleteBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    const response = await fetch(`${SERVER_URL}/api/admin/menu/${deleteBtn.dataset.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                    if (response.ok) { fetchAndRenderMenu(); } else { const data = await response.json(); throw new Error(data.message); }
+                } catch (error) { alert(`Error: ${error.message}`); deleteBtn.disabled = false; deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>'; }
+            });
+
+
+            // Initialize: Start by loading Sales Data for 'Today' and fetching app status
+            fetchAppStatusAndSlots(); 
+            switchTab('tabSales');
+        });
+    </script>
+</body>
+</html>

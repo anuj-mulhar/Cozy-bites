@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fooddial Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ... your existing styles ... */
+        body { font-family: 'Quicksand', sans-serif; background: linear-gradient(to bottom, #dcd0c0, #bfaea2); min-height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; }
+        .card-shadow { box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.1); }
+        .text-brown { color: #5D4037; } .bg-cream { background-color: #FFF8F0; } .bg-terracotta { background-color: #C26D4F; } .text-terracotta { color: #C26D4F; } .bg-input { background-color: #EFE6D8; } .placeholder-brown::placeholder { color: #A18E87; }
+        
+        /* NEW BRANDING: Fooddial Logo Container Styling */
+        #fooddial-logo-icon {
+            background-image: url('img/fooddial-logo.png'); /* Ensure this path is correct */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="relative w-full max-w-md bg-cream rounded-[40px] p-6 sm:p-10 flex flex-col items-center card-shadow h-auto min-h-[650px] justify-between">
+        <div class="absolute top-10 w-full flex flex-col items-center">
+            <div id="fooddial-logo-icon" class="w-12 h-12 mb-2"></div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-brown tracking-wide text-center">Fooddial</h1>
+        </div>
+
+        <div class="bg-white w-full rounded-[30px] p-6 sm:p-8 shadow-lg flex flex-col gap-5 mt-20">
+            <h2 class="text-2xl font-bold text-brown text-center mb-2">Welcome Back!</h2>
+
+            <div id="messageBox" class="hidden p-3 rounded-xl text-center text-sm font-bold"></div>
+            
+            <div id="emailContainer" class="relative">
+                <i class="fa-regular fa-user absolute left-4 top-1/2 -translate-y-1/2 text-brown opacity-60 text-lg"></i>
+                <input type="text" id="loginIdentifier" placeholder="Email Address" class="w-full py-4 pl-12 pr-4 bg-input rounded-2xl text-brown font-semibold placeholder-brown outline-none focus:ring-2 focus:ring-terracotta transition-all">
+            </div>
+
+            <div id="otpContainer" class="relative hidden">
+                <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-brown opacity-60 text-lg"></i>
+                <input type="text" id="loginOtpInput" placeholder="Enter 6-digit OTP" class="w-full py-4 pl-12 pr-4 bg-input rounded-2xl text-brown font-semibold placeholder-brown outline-none focus:ring-2 focus:ring-terracotta transition-all" maxlength="6">
+            </div>
+
+            <button id="loginBtn" class="w-full py-4 bg-terracotta text-white text-lg font-bold rounded-full shadow-lg mt-4 hover:bg-[#a85a3f] transition transform active:scale-95">
+                Get OTP Code
+            </button>
+            
+            <button id="backBtn" class="hidden w-full py-2 text-brown/60 font-bold hover:text-brown transition">
+                Change Email
+            </button>
+
+            <p class="text-center text-brown font-semibold mt-2">
+                Don't have an account? <a href="signup.html" class="text-terracotta hover:underline">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const loginBtn = document.getElementById('loginBtn');
+        const backBtn = document.getElementById('backBtn');
+        const messageBox = document.getElementById('messageBox');
+        const identifierInput = document.getElementById('loginIdentifier');
+        const otpInput = document.getElementById('loginOtpInput');
+        const emailContainer = document.getElementById('emailContainer');
+        const otpContainer = document.getElementById('otpContainer');
+
+        // State to track if OTP has been sent
+        let otpSent = false;
+        let currentEmail = '';
+        const SERVER_URL = 'https://cozybites-backend.onrender.com'; // Define server URL for consistency
+
+        function showMessage(msg, isError = false) {
+            messageBox.textContent = msg;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            messageBox.classList.add(isError ? 'bg-red-100' : 'bg-green-100');
+            messageBox.classList.add(isError ? 'text-red-700' : 'text-green-700');
+        }
+
+        function toggleStep(isStep2) {
+            otpSent = isStep2;
+            if (isStep2) {
+                // Show Step 2 UI
+                emailContainer.classList.add('hidden');
+                otpContainer.classList.remove('hidden');
+                loginBtn.textContent = "Verify & Login";
+                backBtn.classList.remove('hidden');
+                otpInput.focus();
+                showMessage(`OTP sent to ${currentEmail}`, false);
+            } else {
+                // Show Step 1 UI
+                emailContainer.classList.remove('hidden');
+                otpContainer.classList.add('hidden');
+                loginBtn.textContent = "Get OTP Code";
+                backBtn.classList.add('hidden');
+                identifierInput.focus();
+                otpInput.value = ''; // Clear OTP
+                showMessage("", false); // Clear message
+            }
+            loginBtn.disabled = false;
+        }
+
+        backBtn.addEventListener('click', () => {
+            toggleStep(false);
+        });
+
+        loginBtn.addEventListener('click', async () => {
+            const identifier = identifierInput.value.trim();
+            const otpValue = otpInput.value.trim();
+            
+            showMessage("", false); // Clear previous messages
+
+            if (!otpSent) {
+                // ===========================
+                // --- STEP 1: SEND OTP ---
+                // ===========================
+                if(!identifier) return showMessage("Please enter your Email address.", true);
+                if (!identifier.toLowerCase().endsWith('@gmail.com')) {
+                     return showMessage("Please enter a valid Gmail address.", true);
+                }
+
+                loginBtn.textContent = "Sending...";
+                loginBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifier })
+                    });
+                    const data = await response.json();
+
+                    if(response.ok) {
+                        currentEmail = identifier;
+                        toggleStep(true); // Move to Step 2
+                    } else {
+                        showMessage(data.message, true);
+                        loginBtn.textContent = "Get OTP Code";
+                        loginBtn.disabled = false;
+                    }
+                } catch (error) {
+                    showMessage("Server error. Please try again.", true);
+                    loginBtn.disabled = false;
+                }
+
+            } else {
+                // ==================================
+                // --- STEP 2: VERIFY OTP & LOGIN ---
+                // ==================================
+                if(!otpValue || otpValue.length !== 6) return showMessage("Please enter the 6-digit OTP.", true);
+
+                loginBtn.textContent = "Verifying...";
+                loginBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/login-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifier: currentEmail, otpInput: otpValue })
+                    });
+                    const data = await response.json();
+
+                    if(response.ok) {
+                        showMessage("Login Successful! Redirecting...", false);
+                        // SAVE TOKEN (Very Important!)
+                        localStorage.setItem('cozyToken', data.token);
+                        localStorage.setItem('cozyUser', data.username);
+                        
+                        // --- REDIRECT BASED ON ROLE ---
+                        if (data.role === 'admin') {
+                            setTimeout(() => window.location.href = 'admin.html', 1000);
+                        } else {
+                            setTimeout(() => window.location.href = 'menu.html', 1000);
+                        }
+                        // ------------------------------
+                    } else {
+                        showMessage(data.message, true); // "Invalid OTP"
+                        loginBtn.textContent = "Verify & Login";
+                        loginBtn.disabled = false;
+                    }
+                } catch (error) {
+                    showMessage("Verification failed. Please try again.", true);
+                    loginBtn.disabled = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

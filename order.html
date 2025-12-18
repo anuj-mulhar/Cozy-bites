@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fooddial - Order History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FFF8F3;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .cozy-shadow { box-shadow: 0 20px 40px -10px rgba(194, 109, 79, 0.2); }
+        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05); }
+        .text-brown { color: #5D4037; }
+        .bg-terracotta { background-color: #C26D4F; }
+        .text-terracotta { color: #C26D4F; }
+        .bg-cream-light { background-color: #FFFCF8; }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <div class="w-full max-w-md md:max-w-4xl mx-auto">
+
+        <div class="flex items-center gap-4 mb-8">
+            <a href="menu.html" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-brown hover:bg-terracotta hover:text-white transition">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-brown">Fooddial Orders</h1>
+        </div>
+
+        <div id="ordersContainer" class="space-y-6">
+            <p class="text-center text-brown/70 font-semibold py-8 animate-pulse">Loading your orders...</p>
+        </div>
+
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ordersContainer = document.getElementById('ordersContainer');
+            const token = localStorage.getItem('cozyToken');
+            const SERVER_URL = 'https://cozybites-backend.onrender.com'; // Define server URL
+
+            // Security Check 
+            if (!token) {
+                ordersContainer.innerHTML = '<p class="text-center text-red-500 font-bold py-8">Please log in to view your order history.</p>';
+                setTimeout(() => window.location.href = 'signin.html', 2000);
+                return;
+            }
+
+            try {
+                // 1. Fetch real orders from backend API
+                const response = await fetch(`${SERVER_URL}/api/orders`, {
+                    method: 'GET',
+                    headers: { 
+                        'Authorization': `Bearer ${token}` // Send token to get *my* orders
+                    }
+                });
+                const orders = await response.json();
+
+                if (!response.ok) throw new Error(orders.message || "Failed to fetch orders.");
+
+                if (orders.length === 0) {
+                     // BRANDING CHANGE: Empty state message
+                    ordersContainer.innerHTML = '<p class="text-center text-brown/70 font-semibold py-8">You have no past orders yet. Start your first order from the <a href="menu.html" class="text-terracotta hover:underline">Menu</a>!</p>';
+                    return;
+                }
+
+                // 2. Generate HTML for each order
+                ordersContainer.innerHTML = orders.map(order => {
+                    // Format date
+                    const date = new Date(order.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    
+                    // Create item summary string (e.g., "2x Burger, 1x Pasta")
+                    const itemsSummary = order.items.map(item => 
+                        `<span class="font-bold">${item.quantity}x</span> ${item.name}`
+                    ).join(', ');
+
+                    // Set styles based on status
+                    let statusClasses = 'bg-orange-100 text-orange-700 animate-pulse';
+                    let statusIcon = '<i class="fa-solid fa-bowl-food fa-spin-pulse"></i>';
+                    if (order.status === 'Delivered') {
+                        statusClasses = 'bg-green-100 text-green-700';
+                        statusIcon = '<i class="fa-solid fa-circle-check"></i>';
+                    } else if (order.status === 'Cancelled') {
+                        statusClasses = 'bg-red-100 text-red-700';
+                        statusIcon = '<i class="fa-solid fa-xmark"></i>';
+                    }
+                    // Handle 'Out for Delivery'
+                    if (order.status === 'Out for Delivery') {
+                         statusClasses = 'bg-blue-100 text-blue-700 animate-pulse';
+                         statusIcon = '<i class="fa-solid fa-truck-fast"></i>';
+                    }
+
+                    // Use first item image as thumbnail, or a placeholder
+                    const thumbnail = order.items[0]?.image || 'https://via.placeholder.com/150?text=No+Image';
+
+                    // Generate the order card HTML
+                    return `
+                        <div class="bg-white rounded-[30px] p-6 card-shadow flex flex-col sm:flex-row gap-6 transition-all hover:translate-y-[-2px]">
+                            <div class="w-full sm:w-24 h-24 bg-cream-light rounded-2xl flex items-center justify-center shrink-0 cozy-shadow">
+                                <img src="${thumbnail}" alt="Order Thumbnail" class="w-full h-full object-cover rounded-2xl opacity-90">
+                            </div>
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div class="flex flex-wrap justify-between items-start gap-2 mb-3 sm:mb-0">
+                                    <div>
+                                        <h3 class="text-brown font-bold text-lg">Order #CZB-${order._id.slice(-6).toUpperCase()}</h3>
+                                        <p class="text-brown/60 text-sm font-semibold"><i class="fa-regular fa-calendar text-xs mr-2"></i>${date}</p>
+                                    </div>
+                                    <span class="px-4 py-1.5 rounded-full ${statusClasses} text-sm font-bold flex items-center gap-2">
+                                        ${statusIcon} ${order.status}
+                                    </span>
+                                </div>
+                                <div class="my-4">
+                                    <p class="text-brown/80 text-sm sm:text-base leading-relaxed">${itemsSummary}</p>
+                                </div>
+                                <div class="flex justify-between items-center mt-auto pt-4 border-t border-dashed border-brown/10">
+                                    <div>
+                                        <p class="text-brown/60 text-sm font-bold">Total Amount (${order.paymentMethod.split(' - ')[0]})</p>
+                                        <p class="text-terracotta font-bold text-2xl">₹${order.totalAmount.toFixed(2)}</p>
+                                    </div>
+                                     <button class="py-2.5 px-6 bg-cream-light text-brown/60 font-bold rounded-full cursor-not-allowed flex items-center gap-2" title="Order tracking is handled by the admin dashboard.">
+                                        View Details
+                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join(''); // Join array of HTML strings into one string
+
+            } catch (error) {
+                console.error("Error loading orders:", error);
+                ordersContainer.innerHTML = `<p class="text-center text-red-500 font-semibold py-8">Error loading history: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

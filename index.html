@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CozyBites Working Carousel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(to bottom, #dcd0c0, #bfaea2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+
+        .cozy-shadow {
+            box-shadow: 0 25px 50px -12px rgba(194, 109, 79, 0.4);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.1);
+        }
+
+        .text-brown { color: #5D4037; }
+        .bg-cream { background-color: #FFF8F0; }
+        .bg-terracotta { background-color: #C26D4F; }
+        .text-terracotta { color: #C26D4F; }
+        .border-terracotta { border-color: #C26D4F; }
+
+        #slider-track {
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="relative w-full max-w-md bg-cream rounded-[40px] p-6 sm:p-10 flex flex-col items-center card-shadow h-auto min-h-[650px] justify-between">
+
+        <div class="w-full flex flex-col items-center mt-2">
+            <i class="fa-solid fa-bowl-food text-3xl text-brown mb-2 opacity-80"></i>
+            <h1 class="text-3xl sm:text-4xl font-bold text-brown tracking-wide text-center">CozyBites</h1>
+        </div>
+
+        <div class="w-full mt-6 mb-4 relative group">
+            
+            <div class="w-full aspect-[4/3] rounded-[35px] overflow-hidden cozy-shadow bg-gray-200 relative z-10">
+                
+                <div id="slider-track" class="flex w-full h-full">
+                    
+                    <img src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?q=80&w=800&auto=format&fit=crop" 
+                         class="w-full h-full object-cover flex-shrink-0" alt="Pasta">
+                    
+                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800&auto=format&fit=crop" 
+                         class="w-full h-full object-cover flex-shrink-0" alt="Pizza">
+                    
+                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop" 
+                         class="w-full h-full object-cover flex-shrink-0" alt="Salad">
+
+                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop" 
+                         class="w-full h-full object-cover flex-shrink-0" alt="Burger">
+                         
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-2 mt-6">
+                <button onclick="goToSlide(0)" class="dot w-8 h-2 bg-terracotta rounded-full transition-all duration-300"></button>
+                <button onclick="goToSlide(1)" class="dot w-2 h-2 bg-terracotta opacity-30 rounded-full transition-all duration-300 hover:opacity-100"></button>
+                <button onclick="goToSlide(2)" class="dot w-2 h-2 bg-terracotta opacity-30 rounded-full transition-all duration-300 hover:opacity-100"></button>
+                <button onclick="goToSlide(3)" class="dot w-2 h-2 bg-terracotta opacity-30 rounded-full transition-all duration-300 hover:opacity-100"></button>
+            </div>
+        </div>
+
+        <!-- ⭐ UPDATED BUTTONS WITH REDIRECT -->
+        <div class="w-full flex flex-col sm:flex-row gap-4 mb-2">
+            
+            <button onclick="window.location.href='signup.html'"
+                class="flex-1 py-4 bg-terracotta text-white text-lg font-bold rounded-[25px] shadow-lg hover:bg-[#a85a3f] transition transform active:scale-95">
+                Sign Up
+            </button>
+
+            <button onclick="window.location.href='signin.html'"
+                class="flex-1 py-4 bg-transparent border-[3px] border-terracotta text-terracotta text-lg font-bold rounded-[25px] hover:bg-terracotta hover:text-white transition transform active:scale-95">
+                Log In
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+        const track = document.getElementById('slider-track');
+        const dots = document.querySelectorAll('.dot');
+        let currentSlide = 0;
+        const totalSlides = 4;
+        let slideInterval;
+
+        function goToSlide(index) {
+            currentSlide = index;
+            const percent = currentSlide * -100;
+            track.style.transform = `translateX(${percent}%)`;
+            
+            dots.forEach((dot, i) => {
+                if(i === currentSlide) {
+                    dot.classList.remove('w-2', 'opacity-30');
+                    dot.classList.add('w-8', 'opacity-100');
+                } else {
+                    dot.classList.add('w-2', 'opacity-30');
+                    dot.classList.remove('w-8', 'opacity-100');
+                }
+            });
+
+            resetTimer();
+        }
+
+        function nextSlide() {
+            let next = (currentSlide + 1) % totalSlides;
+            goToSlide(next);
+        }
+
+        function startTimer() {
+            slideInterval = setInterval(nextSlide, 3000);
+        }
+
+        function resetTimer() {
+            clearInterval(slideInterval);
+            startTimer();
+        }
+
+        startTimer();
+    </script>
+
+</body>
+</html>

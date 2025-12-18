@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fooddial - Customer Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FFF8F3;
+            min-height: 100vh;
+            /* Use flex for sticky footer/header if needed, otherwise normal flow is fine */
+            display: flex;
+            flex-direction: column; 
+        }
+        .text-brown { color: #5D4037; }
+        .bg-terracotta { background-color: #C26D4F; }
+        .text-terracotta { color: #C26D4F; }
+        .border-terracotta { border-color: #C26D4F; }
+        .bg-input { background-color: #EFE6D8; }
+        .cozy-shadow { box-shadow: 0 20px 40px -10px rgba(194, 109, 79, 0.4); }
+        
+        /* Accordion Styling for better usability */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] summary i {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="p-4 md:p-8 flex justify-between items-center w-full max-w-7xl mx-auto">
+        <a href="menu.html" class="flex items-center gap-2 group">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-terracotta group-hover:bg-terracotta group-hover:text-white transition">
+                <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <span class="font-bold text-brown group-hover:text-terracotta transition hidden md:inline">Back to Menu</span>
+        </a>
+        <h1 class="text-2xl font-bold text-brown">Customer Support</h1>
+        <div class="w-10 md:w-auto"> <div id="profileSection" class="hidden md:flex items-center gap-3 bg-white p-2 pl-4 rounded-full shadow-sm">
+                <span id="userNameDisplay" class="text-brown font-bold text-sm truncate max-w-[150px]">Hii Guest</span>
+                <div class="w-10 h-10 bg-input rounded-full flex items-center justify-center text-terracotta">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <section class="text-center p-8 md:p-12 bg-input/50 mb-8">
+        <h1 class="text-3xl md:text-4xl text-brown font-bold mb-4">How can we help you stay cozy?</h1>
+        <p class="text-brown/70 mb-8 text-lg">Find answers below or get in touch with our team.</p>
+        
+        <div class="max-w-lg mx-auto relative mb-8">
+            <input type="text" id="faqSearchInput" placeholder="Search for answers (e.g., 'refund', 'delivery')" class="w-full p-4 pl-12 rounded-full shadow-sm border-2 border-terracotta/20 focus:border-terracotta outline-none text-brown font-semibold placeholder-brown/50 transition">
+            <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-terracotta text-xl"></i>
+        </div>
+        
+        <button id="helpWithOrderBtn" class="hidden bg-terracotta text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-[#a85a3f] transition transform active:scale-95 items-center justify-center gap-3 mx-auto">
+            <i class="fa-solid fa-bowl-food text-xl"></i> <span>Help with a Recent Order</span>
+        </button>
+    </section>
+
+
+    <main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <div class="lg:col-span-2">
+            <h2 class="text-2xl text-brown font-bold mb-8 pb-2 border-b-2 border-brown/10">Frequently Asked Questions</h2>
+            
+            <div id="faqContainer">
+                <div class="faq-category mb-10">
+                    <h3 class="text-xl text-terracotta font-bold mb-4 flex items-center">
+                        <div class="w-10 h-10 bg-terracotta/10 rounded-full flex items-center justify-center mr-3"><i class="fa-solid fa-truck-fast"></i></div>
+                        Orders & Delivery
+                    </h3>
+                    
+                    <details class="bg-white p-5 rounded-2xl shadow-sm mb-4 group cursor-pointer border-2 border-transparent hover:border-terracotta/20 transition">
+                        <summary class="font-bold text-lg text-brown flex justify-between items-center select-none">
+                            Where is my order?
+                            <i class="fa-solid fa-chevron-down text-terracotta transition-transform duration-300"></i>
+                        </summary>
+                        <p class="text-brown/80 mt-4 pl-4 border-l-4 border-terracotta/30 text-base leading-relaxed">
+                            You can track your order's status in real-time! Just go to the <strong>'Order History'</strong> section in your profile menu. We update the status at every step, from preparation to delivery.
+                        </p>
+                    </details>
+                    
+                    <details class="bg-white p-5 rounded-2xl shadow-sm mb-4 group cursor-pointer border-2 border-transparent hover:border-terracotta/20 transition">
+                        <summary class="font-bold text-lg text-brown flex justify-between items-center select-none">
+                            Something is missing or wrong with my order.
+                            <i class="fa-solid fa-chevron-down text-terracotta transition-transform duration-300"></i>
+                        </summary>
+                        <p class="text-brown/80 mt-4 pl-4 border-l-4 border-terracotta/30 text-base leading-relaxed">
+                            We are so sorry about that! Please use the <strong>"Help with a Recent Order"</strong> button at the top of this page (make sure you're logged in). Select your order, and tell us what went wrong so we can immediately arrange a refund or replacement for the affected items.
+                        </p>
+                    </details>
+
+                    <details class="bg-white p-5 rounded-2xl shadow-sm mb-4 group cursor-pointer border-2 border-transparent hover:border-terracotta/20 transition">
+                        <summary class="font-bold text-lg text-brown flex justify-between items-center select-none">
+                            Can I cancel my order after placing it?
+                            <i class="fa-solid fa-chevron-down text-terracotta transition-transform duration-300"></i>
+                        </summary>
+                        <p class="text-brown/80 mt-4 pl-4 border-l-4 border-terracotta/30 text-base leading-relaxed">
+                            You can cancel your order only while its status is still <strong>"Preparing"</strong>. Once the kitchen has started making your food or it's "Out for Delivery," we cannot accept cancellations to avoid food waste. Please check your Order History quickly if you need to cancel.
+                        </p>
+                    </details>
+                </div>
+
+                <div class="faq-category mb-10">
+                    <h3 class="text-xl text-terracotta font-bold mb-4 flex items-center">
+                        <div class="w-10 h-10 bg-terracotta/10 rounded-full flex items-center justify-center mr-3"><i class="fa-solid fa-credit-card"></i></div>
+                        Payments & Refunds
+                    </h3>
+                    
+                    <details class="bg-white p-5 rounded-2xl shadow-sm mb-4 group cursor-pointer border-2 border-transparent hover:border-terracotta/20 transition">
+                        <summary class="font-bold text-lg text-brown flex justify-between items-center select-none">
+                            How do I request a refund?
+                            <i class="fa-solid fa-chevron-down text-terracotta transition-transform duration-300"></i>
+                        </summary>
+                        <p class="text-brown/80 mt-4 pl-4 border-l-4 border-terracotta/30 text-base leading-relaxed">
+                            If you have an issue with a delivered order (e.g., missing items, poor quality), please report it via the <strong>"Help with a Recent Order"</strong> button. Our team will review your request, and if approved, a refund will be processed to your original payment method.
+                        </p>
+                    </details>
+                    
+                    <details class="bg-white p-5 rounded-2xl shadow-sm mb-4 group cursor-pointer border-2 border-transparent hover:border-terracotta/20 transition">
+                        <summary class="font-bold text-lg text-brown flex justify-between items-center select-none">
+                            When will I get my refund?
+                            <i class="fa-solid fa-chevron-down text-terracotta transition-transform duration-300"></i>
+                        </summary>
+                        <p class="text-brown/80 mt-4 pl-4 border-l-4 border-terracotta/30 text-base leading-relaxed">
+                            Once we approve your refund, it is processed immediately on our end. However, it may take <strong>5-7 business days</strong> for your bank or card issuer to reflect the credit in your account. This timeline is beyond our control.
+                        </p>
+                    </details>
+                </div>
+
+                 <div class="faq-category mb-10">
+                    <h3 class="text-xl text-terracotta font-bold mb-4 flex items-center">
+                        <div class="w-10 h-10 bg-terracotta/10 rounded-full flex items-center justify-center mr-3"><i class="fa-solid fa-user-gear"></i></div>
+                        Account & Profile
+                    </h3>
+                    
+                    <details class="bg-white p-5 rounded-2xl shadow-sm mb-4 group cursor-pointer border-2 border-transparent hover:border-terracotta/20 transition">
+                        <summary class="font-bold text-lg text-brown flex justify-between items-center select-none">
+                            How do I reset my password?
+                            <i class="fa-solid fa-chevron-down text-terracotta transition-transform duration-300"></i>
+                        </summary>
+                        <p class="text-brown/80 mt-4 pl-4 border-l-4 border-terracotta/30 text-base leading-relaxed">
+                            Currently, you can log in securely using a one-time password (OTP) sent to your email. We do not use traditional passwords, so there's nothing to reset! Just use your email to sign in every time.
+                        </p>
+                    </details>
+                </div>
+            </div> <div id="noFaqResults" class="hidden text-center py-12 bg-white rounded-2xl shadow-sm">
+                <i class="fa-solid fa-circle-question text-4xl text-terracotta/50 mb-4"></i>
+                <p class="text-brown/70 font-semibold text-lg">No matching answers found.</p>
+                <p class="text-brown/60">Please try a different keyword or contact us directly.</p>
+            </div>
+        </div>
+
+
+        <div class="lg:col-span-1">
+            <div class="bg-white p-6 rounded-[30px] cozy-shadow border-2 border-terracotta/10 sticky top-8">
+                <h3 class="text-2xl text-brown font-bold mb-4">Still need to talk?</h3>
+                <p class="text-brown/70 mb-8 text-lg leading-relaxed">Our friendly support team is ready to help make things right.</p>
+                
+                <div class="mb-6 flex items-start">
+                    <div class="w-10 h-10 bg-input rounded-full flex items-center justify-center mr-4 shrink-0">
+                        <i class="fa-solid fa-clock text-terracotta"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brown text-lg">Support Hours</h4>
+                        <p class="text-brown/80">Daily: 10:00 AM - 11:00 PM</p>
+                    </div>
+                </div>
+
+                <div class="mb-8 flex items-start">
+                     <div class="w-10 h-10 bg-input rounded-full flex items-center justify-center mr-4 shrink-0">
+                        <i class="fa-solid fa-envelope text-terracotta"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brown text-lg">Email Us</h4>
+                        <a href="mailto:support@cozybites.com" class="text-terracotta hover:underline font-semibold break-all">support@fooddial.com</a>
+                        <p class="text-sm text-brown/60 mt-1">We usually reply within 24 hours.</p>
+                    </div>
+                </div>
+
+                <button id="contactFormBtn" class="w-full bg-terracotta text-white px-6 py-4 rounded-full font-bold shadow-md hover:bg-[#a85a3f] transition transform active:scale-95 flex items-center justify-center gap-2 text-lg">
+                    <i class="fa-solid fa-paper-plane"></i> Send a Message
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center p-8 border-t-2 border-brown/10 mt-auto w-full bg-white/50">
+        <div class="flex justify-center gap-8 text-brown/70 text-sm font-bold mb-4">
+            <a href="#" class="hover:text-terracotta transition">Refund Policy</a>
+            <a href="#" class="hover:text-terracotta transition">Terms of Service</a>
+            <a href="#" class="hover:text-terracotta transition">Privacy Policy</a>
+        </div>
+        <p class="text-brown/50 text-xs">© 2023 Fooddial. All rights reserved.</p>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const helpWithOrderBtn = document.getElementById('helpWithOrderBtn');
+            const profileSection = document.getElementById('profileSection');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+            const faqSearchInput = document.getElementById('faqSearchInput');
+            const faqContainer = document.getElementById('faqContainer');
+            const noFaqResults = document.getElementById('noFaqResults');
+            const contactFormBtn = document.getElementById('contactFormBtn');
+
+            // --- 1. Check Login State ---
+            const token = localStorage.getItem('cozyToken');
+            const userName = localStorage.getItem('cozyUser');
+
+            if (token && userName) {
+                // Logged In
+                helpWithOrderBtn.classList.remove('hidden'); helpWithOrderBtn.classList.add('flex');
+                profileSection.classList.remove('hidden'); profileSection.classList.add('flex');
+                userNameDisplay.textContent = `Hii ${userName}`;
+            } else {
+                // Guest
+                helpWithOrderBtn.classList.add('hidden'); helpWithOrderBtn.classList.remove('flex');
+                profileSection.classList.add('hidden'); profileSection.classList.remove('flex');
+            }
+
+            // --- 2. Button Actions (Placeholders for now) ---
+            helpWithOrderBtn.addEventListener('click', () => {
+                // This redirects the user to their order history to find their order number
+                if(confirm("Navigate to Order History to report an issue?")) {
+                    window.location.href = 'order.html';
+                }
+            });
+
+            contactFormBtn.addEventListener('click', () => {
+                // Placeholder for opening a contact form modal or navigating to a form page
+                alert("Contact form functionality coming soon! Please email us at support@cozybites.com.");
+            });
+
+
+            // --- 3. Simple FAQ Search Functionality ---
+            faqSearchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const faqDetails = faqContainer.querySelectorAll('details');
+                const faqCategories = faqContainer.querySelectorAll('.faq-category');
+                let hasResults = false;
+
+                faqDetails.forEach(detail => {
+                    const question = detail.querySelector('summary').textContent.toLowerCase();
+                    const answer = detail.querySelector('p').textContent.toLowerCase();
+                    
+                    if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                        detail.classList.remove('hidden');
+                        // Automatically open matches for better UX
+                        if (searchTerm !== '') detail.open = true; 
+                        hasResults = true;
+                    } else {
+                        detail.classList.add('hidden');
+                        detail.open = false;
+                    }
+                });
+
+                // Hide empty categories
+                faqCategories.forEach(category => {
+                    // Check if any visible details elements exist within the category
+                    const visibleDetails = category.querySelectorAll('details:not(.hidden)');
+                    if (visibleDetails.length === 0) {
+                        category.classList.add('hidden');
+                    } else {
+                        category.classList.remove('hidden');
+                    }
+                });
+
+                // Show/hide "No Results" message
+                if (hasResults || searchTerm === '') {
+                    noFaqResults.classList.add('hidden');
+                } else {
+                    noFaqResults.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

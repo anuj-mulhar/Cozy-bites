@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fooddial - Checkout</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FFF8F3;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .cozy-shadow { box-shadow: 0 20px 40px -10px rgba(194, 109, 79, 0.2); }
+        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05); }
+        .text-brown { color: #5D4037; }
+        .bg-terracotta { background-color: #C26D4F; }
+        .text-terracotta { color: #C26D4F; }
+        .border-terracotta { border-color: #C26D4F; }
+        .bg-cream-light { background-color: #FFFCF8; }
+        .bg-input { background-color: #EFE6D8; }
+        .border-error { border: 2px solid #ef4444; }
+        
+        /* Modal Backdrop */
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.6); }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <div class="w-full max-w-md md:max-w-6xl mx-auto">
+        <div class="flex items-center gap-4 mb-8">
+            <a href="menu.html" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-brown hover:bg-terracotta hover:text-white transition">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+             <h1 class="text-3xl font-bold text-brown">Fooddial Checkout</h1>
+        </div>
+
+        <div id="statusAlerts" class="mb-6 p-4 rounded-xl font-bold text-center hidden"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
+            <div class="md:col-span-2 space-y-6">
+                
+                <div id="addressCard" class="bg-white rounded-[30px] p-6 card-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all border-2 border-transparent">
+                    <div class="flex items-start gap-4 flex-1">
+                        <div class="w-12 h-12 bg-cream-light rounded-full flex items-center justify-center text-terracotta shrink-0"><i class="fa-solid fa-location-dot text-xl"></i></div>
+                        <div class="flex-1 w-full">
+                            <h3 class="text-brown font-bold mb-1">Deliver To: <span id="addrType">Loading...</span></h3>
+                            <div id="addressViewMode">
+                                <p class="text-brown/70 text-sm font-semibold" id="addrName">Please log in to see addresses.</p>
+                                <p class="text-brown/70 text-sm" id="addrLine1"></p>
+                                <p class="text-brown/70 text-sm" id="addrLine2"></p>
+                                <p class="text-brown/70 text-sm" id="addrPhone"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="manageAddressBtn" class="py-2 px-4 bg-input rounded-full text-terracotta font-bold text-sm hover:bg-terracotta/20 whitespace-nowrap self-start sm:self-center">Change/Add</button>
+                </div>
+
+                <div id="timeSlotCard" class="bg-white rounded-[30px] p-6 card-shadow hidden">
+                    <h2 class="text-xl font-bold text-brown mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-check text-terracotta"></i> Select Delivery Slot</h2>
+                    <select id="deliverySlotSelect" class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta cursor-pointer">
+                    </select>
+                </div>
+
+                <div class="bg-white rounded-[30px] p-6 card-shadow">
+                    <h2 class="text-xl font-bold text-brown mb-6">Your Order</h2>
+                    <div class="flex flex-col gap-6" id="cartItemsContainer">
+                        <p class="text-brown/70">Loading cart...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-1 space-y-6 md:sticky md:top-8 h-fit">
+                <div class="bg-white rounded-[30px] p-6 card-shadow">
+                    <h2 class="text-xl font-bold text-brown mb-6">Payment Method (Online Only)</h2>
+                    <div class="flex flex-col gap-4" id="paymentOptions">
+                        <label class="payment-option flex items-center gap-4 p-4 rounded-2xl border-2 border-terracotta bg-orange-50 cursor-pointer transition-all relative overflow-hidden">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-terracotta shadow-sm z-10"><i class="fa-regular fa-credit-card text-xl"></i></div>
+                            <span class="text-brown font-bold text-lg z-10">Credit Card</span>
+                            <input type="radio" name="payment" class="hidden" data-method="Credit Card" checked>
+                            <i class="fa-solid fa-circle-check absolute right-4 text-terracotta text-2xl z-10"></i>
+                        </label>
+                        <label class="payment-option flex items-center gap-4 p-4 rounded-2xl border-2 border-transparent bg-cream-light hover:bg-orange-50 cursor-pointer transition-all relative overflow-hidden opacity-80 hover:opacity-100">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-brown shadow-sm z-10"><i class="fa-brands fa-google-pay text-xl"></i></div>
+                            <span class="text-brown font-bold text-lg z-10">UPI / GPay</span>
+                            <input type="radio" name="payment" class="hidden" data-method="UPI / GPay"><i class="fa-solid fa-circle-check absolute right-4 text-terracotta text-2xl z-10 opacity-0 transition-opacity"></i>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[30px] p-6 card-shadow">
+                    <h2 class="text-xl font-bold text-brown mb-6">Order Summary</h2>
+                    <div class="flex flex-col gap-3 mb-6">
+                        <div class="flex justify-between text-brown/80 font-semibold"><span>Subtotal</span><span id="summarySubtotal">₹0.00</span></div>
+                        <div class="flex justify-between text-brown/80 font-semibold"><span>Delivery Fee</span><span id="summaryDelivery">₹0.00</span></div>
+                        <div class="flex justify-between text-brown/80 font-semibold"><span>Tax (5%)</span><span id="summaryTax">₹0.00</span></div>
+                    </div>
+                    <div class="w-full h-px bg-dashed bg-brown/20 mb-4"></div>
+                    <div class="flex justify-between items-center mb-8">
+                        <span class="text-brown font-bold text-xl">Total</span>
+                        <span id="summaryTotal" class="text-terracotta font-bold text-3xl">₹0.00</span>
+                    </div>
+                    <button id="placeOrderBtn" class="w-full py-4 bg-terracotta text-white text-xl font-bold rounded-full shadow-lg hover:bg-[#a85a3f] transition transform active:scale-95 flex items-center justify-center gap-3 opacity-50 cursor-not-allowed">Place Order <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="addressModal" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white w-full max-w-xl rounded-[30px] p-6 md:p-8 card-shadow max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalTitle" class="text-2xl font-bold text-brown">Manage Delivery Addresses</h2>
+                <button id="closeModalBtn" class="w-10 h-10 bg-input rounded-full text-brown hover:bg-terracotta hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div id="addressListContainer" class="flex flex-col gap-4 mb-8 border-b border-brown/10 pb-6">
+                <p class="text-brown/70 text-center py-4">Loading saved addresses...</p>
+            </div>
+
+            <h3 id="formTitle" class="text-xl font-bold text-terracotta mb-4 flex items-center gap-2"><i class="fa-solid fa-plus-circle"></i> Add New Address</h3>
+            <form id="addressForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="hidden" id="editAddressId">
+
+                <div class="sm:col-span-2">
+                    <label class="block text-brown font-bold mb-1 text-sm">Contact Name</label>
+                    <input type="text" id="inputName" placeholder="e.g., John's Home" class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta" required>
+                </div>
+                
+                <div>
+                    <label class="block text-brown font-bold mb-1 text-sm">House No. / Society</label>
+                    <input type="text" id="inputHouseNo" placeholder="Flat/House No." class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta" required>
+                </div>
+                
+                <div>
+                    <label class="block text-brown font-bold mb-1 text-sm">Area / Locality</label>
+                    <input type="text" id="inputArea" placeholder="Street / Area Name" class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta" required>
+                </div>
+
+                <div>
+                    <label class="block text-brown font-bold mb-1 text-sm">Phone Number</label>
+                    <input type="tel" id="inputPhone" placeholder="10-digit number" class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta" required pattern="\d{10}">
+                </div>
+
+                <div>
+                    <label class="block text-brown font-bold mb-1 text-sm">Address Type</label>
+                    <select id="inputType" class="w-full p-3 bg-input rounded-xl text-brown font-semibold outline-none focus:ring-2 focus:ring-terracotta cursor-pointer">
+                        <option value="Home">Home</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="sm:col-span-2 flex gap-3 mt-4">
+                    <button type="submit" id="saveAddressBtn" class="flex-1 py-3 bg-terracotta text-white font-bold rounded-xl shadow-md hover:bg-[#a85a3f] transition active:scale-95 flex items-center justify-center gap-2"><i class="fa-solid fa-save"></i> <span>Save Address</span></button>
+                    <button type="button" id="cancelEditBtn" class="px-6 py-3 bg-gray-200 text-brown/70 font-bold rounded-xl hover:bg-gray-300 transition active:scale-95 hidden">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        const SERVER_URL = 'https://cozybites-backend.onrender.com';
+        // NEW: Razorpay Key ID - REPLACE 'rzp_test_YOUR_KEY_ID' with your actual key
+        const RAZORPAY_KEY_ID = 'rzp_test_YOUR_KEY_ID'; 
+        
+        // --- DOM ELEMENTS ---
+        const cartItemsContainer = document.getElementById('cartItemsContainer');
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+        const statusAlerts = document.getElementById('statusAlerts');
+        const manageAddressBtn = document.getElementById('manageAddressBtn');
+        const addressModal = document.getElementById('addressModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const addressListContainer = document.getElementById('addressListContainer');
+        const addressForm = document.getElementById('addressForm');
+        const formTitle = document.getElementById('formTitle');
+        const saveAddressBtn = document.getElementById('saveAddressBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        
+        // Form Inputs
+        const inputName = document.getElementById('inputName');
+        const inputHouseNo = document.getElementById('inputHouseNo');
+        const inputArea = document.getElementById('inputArea');
+        const inputPhone = document.getElementById('inputPhone');
+        const inputType = document.getElementById('inputType');
+        const editAddressId = document.getElementById('editAddressId');
+
+        // Display Address Elements
+        const addrType = document.getElementById('addrType'); 
+        const addrName = document.getElementById('addrName');
+        const addrLine1 = document.getElementById('addrLine1'); 
+        const addrLine2 = document.getElementById('addrLine2'); 
+        const addrPhone = document.getElementById('addrPhone');
+
+        // Payment Elements 
+        const paymentOptions = document.querySelectorAll('.payment-option'); 
+        
+        // NEW Time Slot Elements
+        const timeSlotCard = document.getElementById('timeSlotCard');
+        const deliverySlotSelect = document.getElementById('deliverySlotSelect');
+        
+        // --- DATA ---
+        let cart = JSON.parse(localStorage.getItem('cozyCart')) || [];
+        let currentTotal = 0; // Global total variable
+        let selectedPayment = 'Credit Card'; 
+        let selectedSlot = null;
+        const token = localStorage.getItem('cozyToken');
+        
+        // --- STATE ---
+        let isLoggedIn = !!token;
+        let appIsOnline = false;
+        let isTimeSlotEnabled = false; 
+        let availableTimeSlots = []; 
+        let savedAddresses = [];
+        let selectedAddress = null; 
+
+        // ==========================================
+        // --- 1. STATUS & AUTH CHECKS ---
+        // ==========================================
+        async function initialChecks() {
+            if (cart.length === 0) {
+                statusAlerts.classList.remove('hidden');
+                statusAlerts.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Your cart is empty! <a href="menu.html" class="underline">Go to Menu</a>';
+                statusAlerts.classList.add('bg-yellow-500', 'text-white');
+                return;
+            }
+
+            if (!isLoggedIn) {
+                displayAlert('login');
+                return; 
+            }
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/app-status`);
+                const data = await response.json();
+                if (response.ok && data.isOnline) {
+                    appIsOnline = true;
+                    // Get time slot status
+                    isTimeSlotEnabled = data.isTimeSlotEnabled || false;
+                    availableTimeSlots = data.timeSlots || [];
+                    renderTimeSlots();
+
+                } else {
+                    displayAlert('offline');
+                    return;
+                }
+            } catch (error) {
+                displayAlert('offline');
+                return;
+            }
+            
+            setupPaymentListeners();
+            document.querySelector('.payment-option input[data-method="Credit Card"]').closest('.payment-option').click();
+
+            await fetchAddresses();
+            renderCartItems();
+            
+            // Final explicit calculation to ensure Total is set
+            updateOrderSummary();
+        }
+
+        function displayAlert(type) {
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            statusAlerts.classList.remove('hidden');
+
+            if (type === 'login') {
+                statusAlerts.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> Please log in to place your order!';
+                statusAlerts.classList.add('bg-yellow-500', 'text-white');
+                placeOrderBtn.innerHTML = 'Log In to Order';
+                placeOrderBtn.onclick = () => window.location.href = 'signin.html';
+            } else if (type === 'offline') {
+                statusAlerts.innerHTML = '<i class="fa-solid fa-store-slash mr-2"></i> We are currently closed for new orders.';
+                statusAlerts.classList.add('bg-red-500', 'text-white');
+                placeOrderBtn.innerHTML = 'Temporarily Closed';
+                placeOrderBtn.onclick = null;
+            }
+        }
+
+        // ==========================================
+        // --- NEW: TIME SLOT RENDERING ---
+        // ==========================================
+        function renderTimeSlots() {
+            if (isTimeSlotEnabled && availableTimeSlots.length > 0) {
+                timeSlotCard.classList.remove('hidden');
+                deliverySlotSelect.innerHTML = '<option value="" disabled selected>Select a 2-Hour Slot</option>';
+                availableTimeSlots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot;
+                    option.textContent = slot;
+                    deliverySlotSelect.appendChild(option);
+                });
+                // Add listener to update selectedSlot
+                deliverySlotSelect.addEventListener('change', (e) => {
+                    selectedSlot = e.target.value;
+                    updateOrderSummary(); // Trigger update for validation
+                });
+                // Default selectedSlot to the first available option if no option is selected
+                selectedSlot = deliverySlotSelect.value || null;
+            } else {
+                timeSlotCard.classList.add('hidden');
+                selectedSlot = null;
+            }
+        }
+
+
+        // ==========================================
+        // --- 2. PAYMENT & CART ACTION LISTENERS ---
+        // ==========================================
+        function setupPaymentListeners() {
+            paymentOptions.forEach(option => { 
+                option.removeEventListener('click', handlePaymentSelect);
+                option.addEventListener('click', handlePaymentSelect); 
+            });
+        }
+
+        function handlePaymentSelect(e) {
+            const option = e.currentTarget;
+            if (!appIsOnline) return;
+
+            paymentOptions.forEach(opt => { 
+                opt.classList.remove('border-terracotta', 'bg-orange-50'); 
+                opt.classList.add('border-transparent', 'bg-cream-light', 'opacity-80'); 
+                opt.querySelector('.fa-circle-check').classList.add('opacity-0'); 
+            }); 
+            
+            option.classList.remove('border-transparent', 'bg-cream-light', 'opacity-80'); 
+            option.classList.add('border-terracotta', 'bg-orange-50'); 
+            option.querySelector('.fa-circle-check').classList.remove('opacity-0'); 
+            
+            selectedPayment = option.querySelector('input').dataset.method;
+        }
+
+        // --- CART ITEM ACTIONS (PLUS, MINUS, DELETE) ---
+        cartItemsContainer.addEventListener('click', (e) => {
+            const target = e.target;
+            const cartItemEl = target.closest('.cart-item');
+            if (!cartItemEl || !appIsOnline) return;
+            
+            const index = parseInt(cartItemEl.dataset.index); 
+            
+            if (target.closest('.plus-btn')) {
+                if (cart[index]) cart[index].quantity++; 
+            } else if (target.closest('.minus-btn')) {
+                if (cart[index]) {
+                    cart[index].quantity--;
+                    if (cart[index].quantity < 1) cart.splice(index, 1);
+                }
+            } else if (target.closest('.delete-btn')) {
+                cart.splice(index, 1);
+            }
+            
+            saveCart(); 
+            renderCartItems(); 
+        });
+
+
+        // ==========================================
+        // --- 3. ADDRESS BOOK LOGIC ---
+        // ==========================================
+
+        async function fetchAddresses() {
+            addressListContainer.innerHTML = '<p class="text-brown/70 text-center py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading addresses...</p>';
+            try {
+                const response = await fetch(`${SERVER_URL}/api/user/addresses`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Failed to load address book.");
+                
+                savedAddresses = await response.json();
+                
+                if (savedAddresses.length > 0 && !selectedAddress) {
+                    selectedAddress = savedAddresses[0]; 
+                } else if (savedAddresses.length === 0) {
+                    selectedAddress = null;
+                }
+
+                renderAddressList();
+                displayAddress(selectedAddress);
+                
+            } catch (error) {
+                addressListContainer.innerHTML = '<p class="text-red-500 text-center py-4">Error loading addresses.</p>';
+                displayAddress({ type: "Error", name: "Could not load addresses", houseNo: "Please try logging in again.", area: "", phone: "" });
+            }
+        }
+
+        function displayAddress(address) {
+            // FIX: Check if the DOM elements are present before attempting to set textContent.
+            if (!addrType || !addrName || !addrLine1 || !addrLine2 || !addrPhone) {
+                console.error("Address display elements are missing from the DOM.");
+                return; 
+            }
+
+            if (!address || address.name === "No Address Saved" || address.type === "Error") {
+                addrType.textContent = 'None';
+                addrName.textContent = address?.name || 'No Saved Address';
+                addrLine1.textContent = address?.houseNo || "Click 'Change/Add' to set a delivery location.";
+                addrLine2.textContent = address?.area || '';
+                addrPhone.textContent = address?.phone || '';
+                
+                // Keep the button disabled if address is missing
+                placeOrderBtn.disabled = true;
+                return;
+            }
+            
+            addrType.textContent = address.type || 'Home';
+            addrName.textContent = address.name;
+            addrLine1.textContent = `${address.houseNo}`;
+            addrLine2.textContent = `${address.area}`;
+            addrPhone.textContent = `Phone: ${address.phone}`;
+            placeOrderBtn.disabled = false;
+        }
+
+        function renderAddressList() {
+            if (!addressModal.classList.contains('opacity-100') && savedAddresses.length > 0) return;
+            
+            if (savedAddresses.length === 0) {
+                addressListContainer.innerHTML = '<p class="text-brown/70 text-center py-4">No addresses saved yet. Use the form below to add one!</p>';
+                return;
+            }
+            
+            addressListContainer.innerHTML = savedAddresses.map(addr => {
+                const isSelected = selectedAddress && selectedAddress._id === addr._id;
+                const borderClass = isSelected ? 'border-terracotta bg-orange-50' : 'border-brown/10 hover:bg-input';
+                
+                return `
+                    <div class="address-item p-4 rounded-xl border-2 ${borderClass} flex justify-between items-center transition-all" data-id="${addr._id}">
+                        <div class="flex-1 cursor-pointer select-address-btn" data-id="${addr._id}">
+                            <span class="font-bold text-brown text-lg block">${addr.name} 
+                                <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta">${addr.type}</span>
+                            </span>
+                            <p class="text-sm text-brown/70">${addr.houseNo}, ${addr.area}</p>
+                            <p class="text-sm text-brown/70">Contact: ${addr.phone}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button class="edit-address-btn text-brown/70 hover:text-terracotta transition w-8 h-8 flex items-center justify-center rounded-full" data-id="${addr._id}"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="delete-address-btn text-red-500/70 hover:text-red-600 transition w-8 h-8 flex items-center justify-center rounded-full" data-id="${addr._id}"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // --- ADDRESS MODAL LISTENERS (UNCHANGED) ---
+        manageAddressBtn.addEventListener('click', () => {
+            if (!isLoggedIn) {
+                alert("Please log in to manage addresses.");
+                window.location.href = 'signin.html';
+                return;
+            }
+            addressModal.classList.remove('hidden');
+            setTimeout(() => addressModal.classList.remove('opacity-0'), 10);
+            document.body.style.overflow = 'hidden';
+            fetchAddresses(); 
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            addressModal.classList.add('opacity-0');
+            document.body.style.overflow = '';
+            setTimeout(() => addressModal.classList.add('hidden'), 300);
+        });
+
+        addressListContainer.addEventListener('click', async (e) => {
+            const target = e.target;
+            const id = target.closest('.address-item')?.dataset.id || target.closest('button')?.dataset.id;
+            if (!id) return;
+
+            if (target.closest('.select-address-btn')) {
+                selectedAddress = savedAddresses.find(addr => addr._id === id);
+                renderAddressList(); 
+                displayAddress(selectedAddress); 
+                closeModalBtn.click(); 
+                updateOrderSummary(); // FIX: Recalculate total immediately on selection
+            } 
+            
+            else if (target.closest('.edit-address-btn')) {
+                const addrToEdit = savedAddresses.find(addr => addr._id === id);
+                editAddress(addrToEdit);
+            } 
+            
+            else if (target.closest('.delete-address-btn')) {
+                if (!confirm("Are you sure you want to delete this address?")) return;
+                await deleteAddress(id);
+            }
+        });
+        
+        // --- FORM SUBMISSION (Add/Edit) ---
+        addressForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = editAddressId.value;
+            const isEditing = !!id;
+            
+            const payload = {
+                name: inputName.value.trim(),
+                houseNo: inputHouseNo.value.trim(),
+                area: inputArea.value.trim(),
+                phone: inputPhone.value.trim(),
+                type: inputType.value
+            };
+
+            if (!payload.name || !payload.houseNo || !payload.area || !payload.phone || payload.phone.length < 10) {
+                alert("Please fill in all required fields accurately.");
+                return;
+            }
+
+            saveAddressBtn.disabled = true;
+            saveAddressBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const url = isEditing ? `${SERVER_URL}/api/user/addresses/${id}` : `${SERVER_URL}/api/user/addresses`;
+                const method = isEditing ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("API call failed. Check server logs.");
+                
+                alert(`Address ${isEditing ? 'updated' : 'added'} successfully!`);
+                
+                resetAddressForm();
+                await fetchAddresses(); 
+
+            } catch (error) {
+                alert(`Error saving address: ${error.message}`);
+            } finally {
+                saveAddressBtn.disabled = false;
+                saveAddressBtn.innerHTML = '<i class="fa-solid fa-save"></i> <span>Save Address</span>';
+            }
+        });
+
+        // --- ADDRESS FORM HELPERS ---
+        function editAddress(addr) {
+            editAddressId.value = addr._id;
+            inputName.value = addr.name;
+            inputHouseNo.value = addr.houseNo;
+            inputArea.value = addr.area;
+            inputPhone.value = addr.phone;
+            inputType.value = addr.type;
+            
+            formTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Address';
+            saveAddressBtn.querySelector('span').textContent = 'Update Address';
+            cancelEditBtn.classList.remove('hidden');
+            addressModal.scrollTo({ top: addressModal.scrollHeight, behavior: 'smooth' });
+        }
+
+        function resetAddressForm() {
+            addressForm.reset();
+            editAddressId.value = '';
+            formTitle.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add New Address';
+            saveAddressBtn.querySelector('span').textContent = 'Save Address';
+            cancelEditBtn.classList.add('hidden');
+        }
+        cancelEditBtn.addEventListener('click', resetAddressForm);
+        
+        async function deleteAddress(id) {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/user/addresses/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Delete failed.");
+
+                alert("Address deleted.");
+                if (selectedAddress && selectedAddress._id === id) {
+                    selectedAddress = null; 
+                }
+                await fetchAddresses(); 
+                
+            } catch (error) {
+                alert(`Error deleting address: ${error.message}`);
+            }
+        }
+        
+        // ==========================================
+        // --- CORE FUNCTIONALITY ---
+        // ==========================================
+
+        function saveCart() {
+            localStorage.setItem('cozyCart', JSON.stringify(cart));
+            updateOrderSummary();
+        }
+
+        // --- RENDER CART ITEMS ---
+        function renderCartItems() {
+            cartItemsContainer.innerHTML = '';
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="text-brown/70 text-center py-8 font-semibold">Your cart is empty. <a href="menu.html" class="text-terracotta hover:underline">Go back to menu?</a></p>';
+                updateOrderSummary();
+                return;
+            }
+            
+            cart.forEach((item, index) => {
+                const itemHTML = `
+                    <div class="cart-item flex items-center gap-4 border-b border-dashed border-brown/20 pb-6" data-index="${index}">
+                        <img src="${item.image}" alt="${item.name}" class="w-20 h-20 rounded-2xl object-cover cozy-shadow">
+                        <div class="flex-1">
+                            <h3 class="text-brown font-bold text-lg leading-tight">${item.name}</h3>
+                            <p class="text-terracotta font-bold">₹${item.price.toFixed(2)}</p>
+                        </div>
+                        <div class="flex items-center gap-3 bg-cream-light rounded-full px-2 py-1 shrink-0">
+                            <button class="minus-btn w-8 h-8 bg-white rounded-full text-brown shadow-sm hover:bg-terracotta hover:text-white transition flex items-center justify-center"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <span class="quantity-text text-brown font-bold w-6 text-center">${item.quantity}</span>
+                            <button class="plus-btn w-8 h-8 bg-terracotta rounded-full text-white shadow-sm hover:bg-[#a85a3f] transition flex items-center justify-center"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                        <button class="delete-btn text-brown/40 hover:text-red-500 transition ml-2 shrink-0"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                    </div>
+                `;
+                cartItemsContainer.insertAdjacentHTML('beforeend', itemHTML);
+            });
+            // Removed updateOrderSummary() here to ensure it only runs once explicitly at the end of initialChecks
+        }
+
+        // --- CALCULATE SUMMARY (FIXED) ---
+        function updateOrderSummary() {
+            // FIX: Ensure calculation happens regardless of whether the cart items were re-rendered
+            let subtotal = 0;
+            if (cart.length > 0) {
+                cart.forEach(item => { subtotal += item.price * item.quantity; });
+            }
+
+            const deliveryFee = 50; 
+            const taxRate = 0.05;
+            const tax = subtotal * taxRate; 
+            currentTotal = subtotal + deliveryFee + tax; // Update the global total variable
+
+            // 1. Always display the correct calculated totals (Subtotal, Tax, Delivery)
+            document.getElementById('summarySubtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('summaryTax').textContent = `₹${tax.toFixed(2)}`;
+            document.getElementById('summaryDelivery').textContent = `₹${deliveryFee.toFixed(2)}`; // Set delivery fee explicitly here
+            
+            
+            // --- 2. Validation Check for Time Slot ---
+            let isSlotSelected = true;
+            if (isTimeSlotEnabled) {
+                if (!selectedSlot || selectedSlot === "") {
+                    isSlotSelected = false;
+                    deliverySlotSelect.classList.add('border-error');
+                } else {
+                    deliverySlotSelect.classList.remove('border-error');
+                }
+            }
+            
+            // 3. Final UI Update (Total and Button State)
+            const canPlaceOrder = cart.length > 0 && appIsOnline && isLoggedIn && selectedAddress && isSlotSelected;
+
+            if (!canPlaceOrder) {
+                // Display the correct calculated total but keep button disabled
+                document.getElementById('summaryTotal').textContent = `₹${currentTotal.toFixed(2)}`; 
+                placeOrderBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                placeOrderBtn.disabled = true;
+            } else {
+                // If order can be placed, display the calculated total and enable button
+                document.getElementById('summaryTotal').textContent = `₹${currentTotal.toFixed(2)}`;
+                placeOrderBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                placeOrderBtn.disabled = false;
+            }
+        }
+
+
+        // ==========================================
+        // --- NEW: RAZORPAY PAYMENT INTEGRATION ---
+        // ==========================================
+
+        async function initiatePayment(orderPayload) {
+            // Step 1: Create Razorpay Order on the backend
+            let razorpayOrder;
+            try {
+                const response = await fetch(`${SERVER_URL}/api/create-razorpay-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ amount: orderPayload.totalAmount })
+                });
+                razorpayOrder = await response.json();
+                if (!response.ok) throw new Error(razorpayOrder.message || "Failed to initiate Razorpay order.");
+            } catch (error) {
+                alert(`Payment initiation failed: ${error.message}`);
+                // Re-enable button on failure
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = 'Place Order <i class="fa-solid fa-arrow-right"></i>';
+                placeOrderBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                return;
+            }
+
+            // Step 2: Open Razorpay Checkout popup
+            const options = {
+                key: RAZORPAY_KEY_ID, 
+                amount: razorpayOrder.amount,
+                currency: razorpayOrder.currency,
+                name: "Fooddial Food Delivery",
+                description: "Order Payment",
+                order_id: razorpayOrder.id,
+                handler: async function (response) {
+                    // This fires ON SUCCESSFUL PAYMENT
+                    
+                    orderPayload.paymentMethod = `Razorpay - ${response.razorpay_payment_id}`;
+                    await placeFinalOrder(orderPayload);
+                },
+                prefill: {
+                    name: orderPayload.deliveryAddress.name,
+                    // Email must be extracted from the token payload (or localStorage)
+                    email: JSON.parse(atob(token.split('.')[1])).email || '',
+                    contact: orderPayload.deliveryAddress.phone,
+                },
+                theme: {
+                    color: "#C26D4F" // Terracotta color
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                alert('Payment failed. Please try again or use a different method.');
+                console.error("Razorpay Error:", response.error);
+                
+                // Re-enable button on payment failure
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = 'Place Order <i class="fa-solid fa-arrow-right"></i>';
+                placeOrderBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+            });
+            rzp.open();
+        }
+
+        // Step 3: Function to place the final order after successful payment (or for UPI/GPay simulation)
+        async function placeFinalOrder(orderPayload) {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(orderPayload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("Order Placed Successfully! Redirecting to Order History..."); 
+                    localStorage.removeItem('cozyCart');
+                    window.location.href = 'order.html';
+                } else {
+                    throw new Error(data.message || "Failed to place order (Server Error after Payment).");
+                }
+
+            } catch (error) {
+                alert(`Order placement failed: ${error.message}`);
+            }
+        }
+        
+        // --- PLACE ORDER BUTTON LISTENER (MODIFIED) ---
+        placeOrderBtn.addEventListener('click', async () => { 
+            // 1. Pre-validation check
+            if (placeOrderBtn.disabled || !selectedAddress) {
+                updateOrderSummary(); 
+                return;
+            }
+            
+            if (isTimeSlotEnabled && (!selectedSlot || selectedSlot === "")) {
+                alert("Please select a delivery time slot.");
+                deliverySlotSelect.classList.add('border-error');
+                updateOrderSummary();
+                return;
+            }
+
+            // 2. Lock button during processing
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            placeOrderBtn.classList.add('opacity-70', 'cursor-not-allowed');
+            
+            // 3. Prepare payload
+            const orderPayload = {
+                items: cart,
+                totalAmount: currentTotal, // Use the globally updated currentTotal
+                deliveryAddress: { 
+                    name: selectedAddress.name,
+                    houseNo: selectedAddress.houseNo,
+                    area: selectedAddress.area,
+                    phone: selectedAddress.phone
+                },
+                paymentMethod: selectedPayment,
+                deliverySlot: selectedSlot
+            };
+            
+            // 4. Initiate payment flow
+            await initiatePayment(orderPayload);
+        });
+
+        // --- INITIALIZE ---
+        initialChecks();
+    });
+</script>
+</body>
+</html>
